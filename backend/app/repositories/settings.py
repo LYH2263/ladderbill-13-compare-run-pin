@@ -12,3 +12,16 @@ def peak_factor(conn: sqlite3.Connection) -> float:
     if not row:
         return DEFAULT_PEAK_FACTOR
     return float(row["value"])
+
+
+def set_peak_factor(conn: sqlite3.Connection, factor: float) -> float:
+    """更新全局尖峰系数；只影响之后的新对比，不改变已钉选快照。"""
+    conn.execute(
+        """
+        INSERT INTO settings(key, value) VALUES ('peak_factor', ?)
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+        """,
+        (str(float(factor)),),
+    )
+    conn.commit()
+    return float(factor)

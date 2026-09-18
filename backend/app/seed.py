@@ -20,10 +20,21 @@ def init_db():
         account_id INTEGER,
         input_json TEXT,
         result_json TEXT,
-        created_at TEXT
+        created_at TEXT,
+        pinned INTEGER NOT NULL DEFAULT 0,
+        pinned_at TEXT,
+        deleted_at TEXT
     );
     """
     )
+    # 轻量迁移：为旧版库补齐钉选/软删除列
+    existing_cols = {r["name"] for r in conn.execute("PRAGMA table_info(calc_runs)").fetchall()}
+    if "pinned" not in existing_cols:
+        conn.execute("ALTER TABLE calc_runs ADD COLUMN pinned INTEGER NOT NULL DEFAULT 0")
+    if "pinned_at" not in existing_cols:
+        conn.execute("ALTER TABLE calc_runs ADD COLUMN pinned_at TEXT")
+    if "deleted_at" not in existing_cols:
+        conn.execute("ALTER TABLE calc_runs ADD COLUMN deleted_at TEXT")
     if conn.execute("SELECT COUNT(*) c FROM accounts").fetchone()["c"] == 0:
         conn.execute(
             "INSERT INTO accounts(name, meter_no, note) VALUES ('张家', 'M-1001', '对照：正常用量')"

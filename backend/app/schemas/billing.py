@@ -11,6 +11,11 @@ class BillRequest(BaseModel):
 class CompareRequest(BaseModel):
     kwh: float = Field(ge=0)
     persist: bool = False
+    pinned: bool = False
+
+
+class PeakFactorRequest(BaseModel):
+    peak_factor: float = Field(gt=0)
 
 
 class CalcRunOut(BaseModel):
@@ -20,3 +25,6 @@ class CalcRunOut(BaseModel):
     input_json: str
     result_json: str
     created_at: str
+    pinned: bool = False
+    pinned_at: str | None = None
+    deleted_at: str | None = None

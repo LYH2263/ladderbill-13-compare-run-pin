@@ -57,20 +57,46 @@ class BillingService:
             )
         return {"run_id": run_id, **result}
 
-    def run_compare(self, kwh: float, persist: bool):
+    def run_compare(self, kwh: float, persist: bool, pinned: bool = False):
         tiers = tiers_repo.as_calc_rows(self._conn)
         pf = settings_repo.peak_factor(self._conn)
         result = compare_plain_vs_peak(kwh, tiers, pf)
         run_id = None
-        if persist:
-            run_id = runs_repo.insert(self._conn, "compare", {"kwh": kwh}, result, None)
+        if persist or pinned:
+            # 输入参数与当时所用 peak_factor 一并快照，钉选后不受 settings 改动影响
+            run_id = runs_repo.insert(
+                self._conn,
+                "compare",
+                {"kwh": kwh, "peak_factor": pf},
+                result,
+                None,
+                pinned=pinned,
+            )
         return {"run_id": run_id, **result}
 
     def list_history(self, limit: int = 50):
         return runs_repo.list_recent(self._conn, limit)
 
+    def list_compare_runs(self, page: int = 1, page_size: int = 20):
+        return runs_repo.list_page(self._conn, kind="compare", page=page, page_size=page_size)
+
     def get_run(self, run_id: int):
         return runs_repo.get(self._conn, run_id)
+
+    def pin_compare_run(self, run_id: int, pinned: bool = True):
+        row = runs_repo.get(self._conn, run_id)
+        if not row or row["kind"] != "compare":
+            return None
+        return runs_repo.set_pinned(self._conn, run_id, pinned)
+
+    def delete_compare_run(self, run_id: int):
+        row = runs_repo.get(self._conn, run_id)
+        if not row or row["kind"] != "compare":
+            return None
+        return runs_repo.soft_delete(self._conn, run_id)
+
+    def update_peak_factor(self, factor: float):
+        return settings_repo.set_peak_factor(self._conn, factor)
 
     def dashboard_stats(self):
         accounts = accounts_repo.list_all(self._conn)
