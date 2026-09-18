@@ -22,8 +22,23 @@ def init_db():
         result_json TEXT,
         created_at TEXT
     );
+    CREATE TABLE IF NOT EXISTS compare_runs(
+        id INTEGER PRIMARY KEY,
+        kwh REAL,
+        plain_total REAL,
+        peak_total REAL,
+        delta REAL,
+        peak_factor REAL,
+        segments_json TEXT,
+        created_at TEXT,
+        deleted_at TEXT
+    );
     """
     )
+    # 轻量迁移：为旧库补齐 compare_runs.deleted_at 列
+    cols = {r["name"] for r in conn.execute("PRAGMA table_info(compare_runs)").fetchall()}
+    if cols and "deleted_at" not in cols:
+        conn.execute("ALTER TABLE compare_runs ADD COLUMN deleted_at TEXT")
     if conn.execute("SELECT COUNT(*) c FROM accounts").fetchone()["c"] == 0:
         conn.execute(
             "INSERT INTO accounts(name, meter_no, note) VALUES ('张家', 'M-1001', '对照：正常用量')"

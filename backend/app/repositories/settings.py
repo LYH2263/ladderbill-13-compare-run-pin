@@ -12,3 +12,16 @@ def peak_factor(conn: sqlite3.Connection) -> float:
     if not row:
         return DEFAULT_PEAK_FACTOR
     return float(row["value"])
+
+
+def set_peak_factor(conn: sqlite3.Connection, value: float) -> None:
+    if value <= 0:
+        raise ValueError("peak_factor must be positive")
+    conn.execute(
+        """
+        INSERT INTO settings(key, value) VALUES ('peak_factor', ?)
+        ON CONFLICT(key) DO UPDATE SET value=excluded.value
+        """,
+        (str(value),),
+    )
+    conn.commit()

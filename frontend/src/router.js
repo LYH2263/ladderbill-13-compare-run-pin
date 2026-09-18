@@ -5,6 +5,7 @@ import AccountDetail from './pages/AccountDetail.vue'
 import Workbench from './pages/Workbench.vue'
 import TierRules from './pages/TierRules.vue'
 import PeakCompare from './pages/PeakCompare.vue'
+import CompareRunDetail from './pages/CompareRunDetail.vue'
 import RunHistory from './pages/RunHistory.vue'
 import Settings from './pages/Settings.vue'
 
@@ -17,6 +18,7 @@ export default createRouter({
     { path: '/workbench', component: Workbench },
     { path: '/tiers', component: TierRules },
     { path: '/compare', component: PeakCompare },
+    { path: '/compare/runs/:id', component: CompareRunDetail },
     { path: '/history', component: RunHistory },
     { path: '/settings', component: Settings },
   ],
